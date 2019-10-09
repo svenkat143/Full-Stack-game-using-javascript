@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Stack[GAME]</title>
+  </head>
+  <body>
+    <canvas ontouchstart="stack()"></canvas>
+    <div id="perfect">
+      Perfect
+    </div>
+    <div id="score-data">Score:0</div>
+    <div id="menu">
+      <h2>Stack</h2>
+      <button class="play" onclick="startGame()">Play</button><br><br>
+      If you play on <br> computer use space <br> btn to stack
+    </div>
+    <div id="go">
+      <br><h2>Game Over</h2>
+      <button class="play" onclick="startGame()">Try Again</button><br>
+      Don't forget upvote <br> and write comment <br> with your score
+    </div>
+    <style media="screen">
+    body{
+      background: black;
+      margin: 0;padding: 0;
+      text-align: center;
+      font-family: Arial;
+      font-size: 40px;
+      user-select:none;
+      -webkit-user-select:none;
+      -moz-user-select:none;
+    }
+    canvas{
+      background: lightsteelblue;
+    }
+    #menu{
+      width: 100%;
+      height: 100%;
+      top: 0;left: 0;
+      position: absolute;
+    }
+    #go{
+      width: 100%;
+      height: 100%;
+      display: none;
+      top: 0;left: 0;
+      position: absolute;
+    }
+    #score-data{
+      width: 100%;
+      height: auto;
+      display: none;
+      font-weight: bold;
+      top: 0;left: 0;
+      position: absolute;
+    }
+    #perfect{
+      width: 100%;
+      position: absolute;
+      font-weight: bold;
+      top:100px;left: 0;
+      text-shadow: 0 0 5px grey;
+      display: none;
+      color: gold;
+    }
+    .play{
+      width: 200px;
+      height: 70px;
+      background: royalblue;
+      color: white;
+      border-width: 0;
+      border-radius: 5px;
+      font-size: 30px;
+      font-family: Arial;
+    }
+    </style>
+    <script type="text/javascript">
+    var canvas = document.querySelector('canvas');
+    var ctxt = canvas.getContext('2d');
+    var menu = document.querySelector('#menu');
+    var go = document.querySelector('#go');
+    var perfect = document.querySelector('#perfect');
+    var scoreData = document.querySelector('#score-data');
+    var k = 1;
+    var ps = 0;
+    var clr = '1234567890a';
+    var stacks = [[70, 470, 310, 250, "red"],[100, 440, 250, 30, "orange"],[100, 410, 224, 30, "#cf64e7"],[154, 380, 170, 30, "#c015d0"],[178, 350, 146, 30, "#7ec488"],[194, 320, 130, 30, "#e25463"],[194, 290, 122, 30, "#643785"],[194, 260, 114, 30, "#27c4e3"],[194, 230, 82, 30, "#28df9c"],[218, 200, 58, 30, "#1bbb1b"],[234, 170, 42, 30, "#b4e367"],[530, 140, 42, 30, "#2363de"]];
+    var num = 1;
+    var score = 0;
+    var width = 250;
+    var moveBack = false;
+    var reqAnimFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.msRequestAnimationFrame || window.oRequestAnimationFrame;
+    var moving;
+    function resize() {
+      var w = window.innerWidth-10;
+      var h = window.innerHeight-10;
+      if (w > h) {
+        k = h/450;
+        canvas.width = h;
+        canvas.height = h;
+      }
+      else {
+        k = w/450;
+        canvas.width = w;
+        canvas.height = w;
+      }
+
+      document.body.style.fontSize = 40*k+'px';
+      perfect.style.top = 100*k+'px';
+      perfect.style.fontSize = 50*k+'px';
+      perfect.style.textShadow = '0 0 '+5*k+'px grey';
+      var btns = document.querySelectorAll('.play');
+      for (var i = 0; i < btns.length; i++) {
+        btns[i].style.width = 200*k+'px';
+        btns[i].style.height = 70*k+'px';
+        btns[i].style.fontSize = 30*k+'px';
+        btns[i].style.borderRadius = 5*k+'px';
+      }
+    }
+    var resizing = setInterval(resize,10);
+    resize();
+    setTimeout(function () {
+      clearInterval(resizing);
+    },2000);
+    function startGame() {
+      ps = 0;
+      num = 1;
+      width = 250;
+      moveBack = false;
+      score = 0;
+      stacks = [[70,450-250,450-140,250,'#'+clr[Math.floor(Math.random()*clr.length)]+clr[Math.floor(Math.random()*clr.length)]+clr[Math.floor(Math.random()*clr.length)]+clr[Math.floor(Math.random()*clr.length)]+clr[Math.floor(Math.random()*clr.length)]+clr[Math.floor(Math.random()*clr.length)]],[100,170,250,30,'#'+clr[Math.floor(Math.random()*clr.length)]+clr[Math.floor(Math.random()*clr.length)]+clr[Math.floor(Math.random()*clr.length)]+clr[Math.floor(Math.random()*clr.length)]+clr[Math.floor(Math.random()*clr.length)]+clr[Math.floor(Math.random()*clr.length)]]];
+      newStack();
+      moving = setInterval(move,10);
+      document.onkeydown = function(e) {
+        if (e.keyCode == 32) {
+          stack();
+        }
+      }
+      menu.style.display = 'none';
+      go.style.display = 'none';
+      scoreData.style.display = 'block';
+      scoreData.innerHTML = 'Score:0';
+    }
+    function gameover() {
+      go.style.display = 'block';
+      perfect.style.display = 'none';
+      document.onkeydown = startGame;
+      clearInterval(moving);
+    }
+    function draw() {
+      ctxt.clearRect(-canvas.width,-canvas.width,canvas.width*2,canvas.width*2);
+      ctxt.clearRect(-canvas.width,-canvas.width,canvas.width*2,canvas.width*2);
+      ctxt.beginPath();
+      ctxt.clearRect(-canvas.width,-canvas.width,canvas.width*2,canvas.width*2);
+      for (var i = 0; i < stacks.length; i++) {
+        ctxt.fillStyle = stacks[i][4];
+        ctxt.fillRect(stacks[i][0]*k,stacks[i][1]*k,stacks[i][2]*k,stacks[i][3]*k);
+      }
+      reqAnimFrame(draw);
+    }
+    reqAnimFrame(draw);
+    function newStack() {
+      num++;
+      var c = '#'+clr[Math.floor(Math.random()*clr.length)]+clr[Math.floor(Math.random()*clr.length)]+clr[Math.floor(Math.random()*clr.length)]+clr[Math.floor(Math.random()*clr.length)]+clr[Math.floor(Math.random()*clr.length)]+clr[Math.floor(Math.random()*clr.length)];
+      if (moveBack == false) {
+        moveBack = true;
+        stacks.push([500,140,width,30,c]);
+      }
+      else {
+        moveBack = false;
+        stacks.push([-150,140,width,30,c]);
+      }
+    }
+    function move() {
+      if (moveBack == false) {
+        stacks[num][0] += 5;
+      }
+      else {
+        stacks[num][0] -= 5;
+      }
+      if (stacks[num][0] >= 620-width) {
+        moveBack = true;
+      }
+      else if (stacks[num][0] <= -180) {
+        moveBack = false;
+      }
+    }
+    function stack() {
+      if (checkCollision({x:stacks[num][0],y:stacks[num][1],w:stacks[num][2],h:stacks[num][3]},{x:stacks[num-1][0],y:stacks[num-1][1],w:stacks[num-1][2],h:stacks[num-1][3]}) == true) {
+        for (var i = 0; i < stacks.length; i++) {
+          stacks[i][1] += 30;
+        }
+        if (stacks[num-1][0] > stacks[num][0]) {
+          width -= stacks[num-1][0]-stacks[num][0];
+          stacks[num][0] = stacks[num-1][0];
+          stacks[num][2] = width;
+        }
+        else {
+          width -= stacks[num][0]-stacks[num-1][0];
+          stacks[num][0] = stacks[num-1][0]+stacks[num-1][2]-width;
+          stacks[num][2] = width;
+        }
+        if (stacks[num][2] == stacks[num-1][2]) {
+          perfect.style.display = 'block';
+          var show = setInterval(function () {
+            perfect.style.display = 'block';
+            if (ps >= 2) {
+              perfect.innerHTML = 'Perfect x'+ps;
+            }
+          },50)
+          setTimeout(function () {
+            perfect.style.display = 'none';
+            perfect.innerHTML = 'Perfect';
+            clearInterval(show);
+          },1000);
+          ps += 1;
+          score += 20*ps;
+        }
+        else {
+          score += 10;
+          ps = 0;
+        }
+        newStack();
+        scoreData.innerHTML = 'Score:'+score;
+        if (width == 0) {
+          gameover()
+        }
+      }
+      else {
+        gameover();
+      }
+    }
+
+    function checkCollision(a,b){
+      if(a.x >= b.x-a.w && a.x <= b.x+b.w && a.y >= b.y-a.h && a.y <= b.y+b.h){
+        return true;
+      }
+      else{
+        return false;
+      }
+    }
+    </script>
+  </body>
+</html>
